@@ -2248,7 +2248,8 @@ public final class BTraceRuntime {
 
     private static String resolveFileName(String name) {
         if (name.indexOf(File.separatorChar) != -1) {
-            throw new IllegalArgumentException("directories are not allowed");
+        		return name;
+//            throw new IllegalArgumentException("directories are not allowed");
         }
         StringBuilder buf = new StringBuilder();
         buf.append('.');
