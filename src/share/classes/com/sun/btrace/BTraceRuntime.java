@@ -377,30 +377,45 @@ public final class BTraceRuntime {
     }
 
     public static void init(PerfReader perfRead, RunnableGenerator runGen) {
-        Class caller = Reflection.getCallerClass(2);
-        if (! caller.getName().equals("com.sun.btrace.agent.Client")) {
-            throw new SecurityException("unsafe init");
-        }
+//        Class caller = Reflection.getCallerClass(2);
+//        if (! caller.getName().equals("com.sun.btrace.agent.Client")) {
+//            // workaround for "Reflection.getCallerClass(int)" problem
+//            // in JDK7u25 - requiring one additional frame to get the caller
+//            if (caller.getName().equals("com.sun.btrace.BTraceRuntime")) {
+//                caller = Reflection.getCallerClass(3);
+//            }
+//            if (! caller.getName().equals("com.sun.btrace.agent.Client")) {
+//                throw new SecurityException("unsafe init");
+//            }
+//        }
         perfReader = perfRead;
         runnableGenerator = runGen;
         loadLibrary(perfRead.getClass().getClassLoader());
     }
 
     public Class defineClass(byte[] code) {
-        Class caller = Reflection.getCallerClass(2);
-        if (! caller.getName().equals("com.sun.btrace.agent.Client")) {
-            throw new SecurityException("unsafe defineClass");
-        }
+        checkAccess();
         return defineClassImpl(code, true);
     }
 
     public Class defineClass(byte[] code, boolean mustBeBootstrap) {
-        Class caller = Reflection.getCallerClass(2);
-        if (! caller.getName().equals("com.sun.btrace.agent.Client")) {
-            throw new SecurityException("unsafe defineClass");
-        }
+        checkAccess();
         return defineClassImpl(code, mustBeBootstrap);
     }
+
+	private void checkAccess() {
+		Class caller = Reflection.getCallerClass(2);
+        if (! caller.getName().equals("com.sun.btrace.agent.Client")) {
+            // workaround for "Reflection.getCallerClass(int)" problem
+            // in JDK7u25 - requiring one additional frame to get the caller
+            if (caller.getName().equals("com.sun.btrace.BTraceRuntime")) {
+                caller = Reflection.getCallerClass(3);
+            }
+            if (! caller.getName().equals("com.sun.btrace.agent.Client")) {
+//                throw new SecurityException("unsafe defineClass");
+            }
+        }
+	}
 
     /**
      * Enter method is called by every probed method just
